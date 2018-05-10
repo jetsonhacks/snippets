@@ -1,0 +1,38 @@
+# Some Shell file snips
+# For use on the Jetson TX dev kits
+
+# Get the number of CPUS and make 
+# Subtract one since CPU0 is for interrupts and such
+NUM_CPU=$(nproc)
+make -j$(($NUM_CPU - 1))
+
+# Fix up the OpenGL libraries that get clobbered
+cd /usr/lib/aarch64-linux-gnu/
+sudo ln -sf tegra/libGL.so libGL.so
+
+# MAKE
+# Consider $ sudo nvpmodel -m 2 or $ sudo nvpmodel -m 0
+NUM_CPU=$(nproc)
+make -j$(($NUM_CPU - 1))
+if [ $? -eq 0 ] ; then
+  echo "Make successful"
+else
+  # Try to make again; Sometimes there are issues with the build
+  # because of lack of resources or concurrency issues
+  echo "Make did not build " >&2
+  echo "Retrying ... "
+  # Single thread this time
+  make
+  if [ $? -eq 0 ] ; then
+    echo "Make successful"
+  else
+    # Try to make again
+    echo "Make did not successfully build" >&2
+    exit 1
+  fi
+fi
+
+ pkg-config --modversion opencv
+
+
+
